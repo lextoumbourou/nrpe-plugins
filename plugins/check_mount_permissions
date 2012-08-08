@@ -43,7 +43,7 @@ def usage():
     
 def get_args():
     """Update global variables based on arguments.
-    Using optparse instead of argparse for backwards compatibilty
+    Use getopt instead of argparse for backwards compatibilty
 
     """
     global MOUNT, PERM, TIMEOUT
