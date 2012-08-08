@@ -2,6 +2,7 @@
 from sys import exit, argv
 import signal
 import getopt
+
 ##############################################################################
 # check_mount_permission
 # Author: Lex Toumbourou
@@ -104,13 +105,16 @@ def main():
     first_handler = signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(TIMEOUT)
     try:
-        check_mounts()
+        return check_mounts()
     except TimeoutException:
         # A timeout occured, this could be bad (WARNING)
         print "Timeout occured finding mount point"
         return NAGIOS_WARNING 
     finally:
         signal.signal(signal.SIGALRM, first_handler)
+
+    # Just in case something breaks, return unknown
+    return NAGIOS_UNKNOWN
 
 if __name__ == '__main__':
     get_args()
