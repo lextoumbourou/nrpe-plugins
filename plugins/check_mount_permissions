@@ -85,7 +85,6 @@ def check_mounts():
 
     """
     for line in open('/proc/mounts'): 
-        print "Looking for ", MOUNT
         mount = line.split(' ')
         mount_point = mount[1]
         current_perm = mount[3].split(',')[0]
