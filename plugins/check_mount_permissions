@@ -1,9 +1,7 @@
 #!/usr/bin/python
-
 from sys import exit, argv
 import signal
 import getopt
-
 ##############################################################################
 # check_mount_permission
 # Author: Lex Toumbourou
