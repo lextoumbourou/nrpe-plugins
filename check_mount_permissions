@@ -1,0 +1,120 @@
+#!/usr/bin/python
+
+from sys import exit, argv
+import signal
+import getopt
+
+##############################################################################
+# check_mount_permission
+# Author: Lex Toumbourou
+# Date: 08/2012
+#
+# NRPE plugin to check mounted filesystem permissions (read-write or read-only)
+# ./check_mount_permission --usage
+#
+# References: 
+#   * http://pguides.net/python-tutorial/python-timeout-a-function/
+#   * http://nagiosplug.sourceforge.net/developer-guidelines.html#AEN76
+##############################################################################
+
+# Global default (overwritten by command line args)
+TIMEOUT = 10
+MOUNT = "/"
+PERM = "rw"
+
+# Nagios return codes
+NAGIOS_OK = 0
+NAGIOS_WARNING = 1
+NAGIOS_CRITICAL = 2
+NAGIOS_UNKNOWN = 3
+
+def usage():
+    return ('Usage: \n\n'
+            '-u display usage message and exit (--usage)\n'
+            '-v change verbose level. Not implemented (--verbosity)\n'
+            '-m mount point to check. Default is / (--mount)\n'
+            '-p permission level, either "ro" or "rw". Default is rw (--permission)\n'
+            '-t timeout in seconds. Default is 10 (--timeout)\n\n'
+            'Examples:\n\n'
+            '~> ./check_mount_permissions --mount /data/read_only -permission ro\n'
+            '     Check "/data/read_only" mount to ensure it\'s read-only\n'
+            '~> ./check_mount_permissions -m / -p rw -t 11\n'
+            '     Check "/" mount to ensure it\'s read-write. Timeout after 11 secs\n')
+    
+def get_args():
+    """Update global variables based on arguments.
+    Using optparse instead of argparse for backwards compatibilty
+
+    """
+    global MOUNT, PERM, TIMEOUT
+    opts, args = getopt.gnu_getopt(argv[1:], 'uv:m:p:t:', 
+                                   ['usage',
+                                    'verbose=',
+                                    'mount=',
+                                    'permission=',
+                                    'timeout='])
+    for opt, arg in opts:
+        if opt in ('-u', '--usage'):
+            print usage()
+            exit()
+        elif opt in ('-v', '--verbose'):
+            pass
+        elif opt in ('-m', '--mount'):
+            MOUNT = str(arg)
+        elif opt in ('-p', '--permission'):
+            PERM = str(arg)
+        elif opt in ('t', '--timeout'):
+            TIMEOUT = int(arg)
+
+class TimeoutException(Exception):
+    pass
+
+def check_permission(current_perm):
+    """Return a int exit code based on mount permissions"""
+    if current_perm == PERM:
+        # File system is mounted correctly (OK)
+        print MOUNT+" is mounted "+current_perm
+        return NAGIOS_OK
+    else:
+        # File system is mounted incorrectly (CRITICAL)
+        print MOUNT+" is not mounted as {0}, it's {1}".format(PERM,
+                                                              current_perm)
+        return NAGIOS_CRITICAL 
+    
+def check_mounts():
+    """Iterate through mount points looking for root, prints error
+    or success message then returns exit code
+
+    """
+    for line in open('/proc/mounts'): 
+        print "Looking for ", MOUNT
+        mount = line.split(' ')
+        mount_point = mount[1]
+        current_perm = mount[3].split(',')[0]
+
+        if mount_point  == MOUNT:
+            code = check_permission(current_perm) 
+            return code
+
+        # Mount point hasn't been found (UNKNOWN)
+        print "Unable to find mount point"
+        return NAGIOS_UNKNOWN
+
+def main():
+    """Handle timeout and calling check_mount function"""
+    def timeout_handler(signum, frame):
+        raise TimeoutException()
+    first_handler = signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(TIMEOUT)
+    try:
+        check_mounts()
+    except TimeoutException:
+        # A timeout occured, this could be bad (WARNING)
+        print "Timeout occured finding mount point"
+        return NAGIOS_WARNING 
+    finally:
+        signal.signal(signal.SIGALRM, first_handler)
+
+if __name__ == '__main__':
+    get_args()
+    exit(main())
