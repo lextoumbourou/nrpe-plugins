@@ -15,7 +15,7 @@ import getopt
 #   * http://nagiosplug.sourceforge.net/developer-guidelines.html#AEN76
 ##############################################################################
 
-# Global default (overwritten by command line args)
+# Define constant defaults (overwritten by command line args)
 TIMEOUT = 10
 MOUNT = "/"
 PERM = "rw"
