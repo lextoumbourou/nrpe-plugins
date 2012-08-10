@@ -27,6 +27,9 @@ NAGIOS_WARNING = 1
 NAGIOS_CRITICAL = 2
 NAGIOS_UNKNOWN = 3
 
+class TimeoutException(Exception):
+    pass
+
 def usage():
     return ('Usage: \n\n'
             '-u display usage message and exit (--usage)\n'
@@ -64,9 +67,6 @@ def get_args():
             PERM = str(arg)
         elif opt in ('t', '--timeout'):
             TIMEOUT = int(arg)
-
-class TimeoutException(Exception):
-    pass
 
 def check_permission(current_perm):
     """Return a int exit code based on mount permissions"""
