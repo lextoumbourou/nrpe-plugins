@@ -1,8 +1,4 @@
 #!/usr/bin/python
-from sys import exit, argv
-import signal
-import getopt
-
 ##############################################################################
 # check_mount_permission
 # Author: Lex Toumbourou
@@ -15,6 +11,9 @@ import getopt
 #   * http://pguides.net/python-tutorial/python-timeout-a-function/
 #   * http://nagiosplug.sourceforge.net/developer-guidelines.html#AEN76
 ##############################################################################
+from sys import exit, argv
+import getopt
+import signal
 
 # Define constant defaults (overwritten by command line args)
 TIMEOUT = 10
